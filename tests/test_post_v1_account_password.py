@@ -1,11 +1,15 @@
+import requests
+
+from dm_api_account.models.reset_password_model import ResetPasswordModel
 from services.dm_api_account import DmApiAccount
 
 
 def test_post_v1_account_password():
     api = DmApiAccount(host="http://localhost:5051")
-    json = {
-        "login": "<string>",
-        "email": "<string>"
-    }
+    login = "login41"
+    json = ResetPasswordModel(
+        login=login,
+        email=f"{login}@mail.ru"
+    )
     response = api.account.post_v1_account_password(json=json)
-    print(response)
+    assert response.status_code == requests.codes.ok
