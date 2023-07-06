@@ -1,9 +1,10 @@
-import requests
+from hamcrest import assert_that, equal_to, has_property
 
+from dm_api_account.models.user_envelope_model import UserRole
 from services.dm_api_account import DmApiAccount
 from services.mailhog import MailhogApi
 import structlog
-from dm_api_account.models.registration_model import RegistrationModel
+from dm_api_account.models.registration_model import Registration
 
 structlog.configure(
     processors=[
@@ -15,16 +16,22 @@ structlog.configure(
 def test_post_v1_account():
     mailhog = MailhogApi(host="http://localhost:5025")
     api = DmApiAccount(host="http://localhost:5051")
-    login = "login58"
-    json = RegistrationModel(
+    login = "login72"
+    json = Registration(
         login=login,
         email=f"{login}@mail.ru",
         password=login + login
     )
-    # # Регистрация нового пользователя
+    # Регистрация нового пользователя
     response = api.account.post_v1_account(json=json)
-    assert response.status_code == requests.codes.created, f"Expected status code: 201, got: {response.status_code}"
+
     # Активация зарегистрированного пользователя
     token = mailhog.get_token_from_last_email()
     response = api.account.put_v1_account_token(token=token)
-    assert response.status_code == requests.codes.ok
+
+    assert_that(response.resource, has_property(
+        "roles", [UserRole.GUEST, UserRole.PLAYER]
+    ))
+    assert_that(response.resource.login, equal_to(login))
+    assert_that(response.resource.rating.quality, equal_to(0))
+    assert_that(response.resource.rating.enabled, equal_to(True))
