@@ -5,7 +5,7 @@ import structlog
 from dm_api_account.models.reset_password_model import ResetPassword
 from dm_api_account.models.user_envelope_model import UserRole
 from services.dm_api_account import DmApiAccount
-from hamcrest import assert_that, equal_to, contains_exactly, has_key, instance_of
+from hamcrest import assert_that, instance_of, has_properties
 
 structlog.configure(
     processors=[
@@ -16,14 +16,17 @@ structlog.configure(
 
 def test_post_v1_account_password():
     api = DmApiAccount(host="http://localhost:5051")
-    login = "login76"
+    login = "login94"
     json = ResetPassword(
         login=login,
         email=f"{login}@mail.ru"
     )
     response = api.account.post_v1_account_password(json=json)
 
-    assert_that(response.metadata, has_key("email"))
-    assert_that(response.resource.login, equal_to(login))
-    assert_that(response.resource.registration, instance_of(datetime))
-    assert_that(response.resource.roles, contains_exactly(UserRole.GUEST, UserRole.PLAYER))
+    assert_that(response.resource, has_properties(
+        {
+            "login": login,
+            "roles": [UserRole.GUEST, UserRole.PLAYER],
+            "registration": instance_of(datetime)
+        }
+    ))

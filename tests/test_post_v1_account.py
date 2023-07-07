@@ -1,6 +1,6 @@
-from hamcrest import assert_that, equal_to, has_property
+from hamcrest import assert_that, has_properties
 
-from dm_api_account.models.user_envelope_model import UserRole
+from dm_api_account.models.user_envelope_model import UserRole, Rating
 from services.dm_api_account import DmApiAccount
 from services.mailhog import MailhogApi
 import structlog
@@ -16,7 +16,7 @@ structlog.configure(
 def test_post_v1_account():
     mailhog = MailhogApi(host="http://localhost:5025")
     api = DmApiAccount(host="http://localhost:5051")
-    login = "login72"
+    login = "login97"
     json = Registration(
         login=login,
         email=f"{login}@mail.ru",
@@ -29,9 +29,14 @@ def test_post_v1_account():
     token = mailhog.get_token_from_last_email()
     response = api.account.put_v1_account_token(token=token)
 
-    assert_that(response.resource, has_property(
-        "roles", [UserRole.GUEST, UserRole.PLAYER]
+    assert_that(response.resource, has_properties(
+        {
+            "login": login,
+            "roles": [UserRole.GUEST, UserRole.PLAYER],
+            "rating": Rating(
+                enabled=True,
+                quality=0,
+                quantity=0
+            )
+        }
     ))
-    assert_that(response.resource.login, equal_to(login))
-    assert_that(response.resource.rating.quality, equal_to(0))
-    assert_that(response.resource.rating.enabled, equal_to(True))

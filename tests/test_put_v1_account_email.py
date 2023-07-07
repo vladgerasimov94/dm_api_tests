@@ -1,9 +1,9 @@
 from dm_api_account.models.change_email_model import ChangeEmail
 from dm_api_account.models.registration_model import Registration
-from dm_api_account.models.user_envelope_model import UserRole
+from dm_api_account.models.user_envelope_model import UserRole, Rating
 from services.dm_api_account import DmApiAccount
 from services.mailhog import MailhogApi
-from hamcrest import assert_that, equal_to, contains_exactly
+from hamcrest import assert_that, has_properties
 
 import structlog
 
@@ -17,7 +17,7 @@ structlog.configure(
 def test_put_v1_account_email():
     mailhog = MailhogApi(host="http://localhost:5025")
     api = DmApiAccount(host="http://localhost:5051")
-    login = "login79"
+    login = "login94"
     password = login + login
     email = f"{login}@mail.ru"
     json = Registration(
@@ -31,9 +31,17 @@ def test_put_v1_account_email():
     token = mailhog.get_token_from_last_email()
     response = api.account.put_v1_account_token(token=token)
 
-    assert_that(response.resource.login, equal_to(login))
-    assert_that(response.resource.rating.quality, equal_to(0))
-    assert_that(response.resource.rating.enabled, equal_to(True))
+    assert_that(response.resource, has_properties(
+        {
+            "login": login,
+            "roles": [UserRole.GUEST, UserRole.PLAYER],
+            "rating": Rating(
+                enabled=True,
+                quality=0,
+                quantity=0
+            )
+        }
+    ))
 
     # Изменение почты зарегистрированного пользователя
     json = ChangeEmail(
@@ -43,6 +51,14 @@ def test_put_v1_account_email():
     )
     response = api.account.put_v1_account_email(json=json)
 
-    assert_that(response.resource.login, equal_to(login))
-    assert_that(response.resource.rating.quality, equal_to(0))
-    assert_that(response.resource.roles, contains_exactly(UserRole.GUEST, UserRole.PLAYER))
+    assert_that(response.resource, has_properties(
+        {
+            "login": login,
+            "roles": [UserRole.GUEST, UserRole.PLAYER],
+            "rating": Rating(
+                enabled=True,
+                quality=0,
+                quantity=0
+            )
+        }
+    ))
