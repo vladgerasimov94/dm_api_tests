@@ -111,7 +111,7 @@ class UserDetails(BaseModel):
     original_picture_url: Optional[StrictStr] = Field(
         None, alias='originalPictureUrl', description='URL of profile picture original'
     )
-    info: Optional[InfoBbText] = None
+    info: Optional[StrictStr] = None  # InfoBbText - Обновил, потому что получал ошибку
     settings: Optional[UserSettings] = None
 
 

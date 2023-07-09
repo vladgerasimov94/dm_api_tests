@@ -1,8 +1,5 @@
-from dm_api_account.models.change_email_model import ChangeEmail
-from dm_api_account.models.registration_model import Registration
 from dm_api_account.models.user_envelope_model import UserRole, Rating
-from services.dm_api_account import DmApiAccount
-from services.mailhog import MailhogApi
+from services.dm_api_account import Facade
 from hamcrest import assert_that, has_properties
 
 import structlog
@@ -15,22 +12,17 @@ structlog.configure(
 
 
 def test_put_v1_account_email():
-    mailhog = MailhogApi(host="http://localhost:5025")
-    api = DmApiAccount(host="http://localhost:5051")
-    login = "login94"
+    api = Facade(host="http://localhost:5051")
+    login = "login121"
     password = login + login
     email = f"{login}@mail.ru"
-    json = Registration(
+    api.account.register_new_user(
         login=login,
-        email=f"{login}@mail.ru",
+        email=email,
         password=password
     )
-    # Регистрация нового пользователя
-    response = api.account.post_v1_account(json=json)
-    # Активация зарегистрированного пользователя
-    token = mailhog.get_token_from_last_email()
-    response = api.account.put_v1_account_token(token=token)
 
+    response = api.account.activate_registered_user(login=login)
     assert_that(response.resource, has_properties(
         {
             "login": login,
@@ -43,14 +35,11 @@ def test_put_v1_account_email():
         }
     ))
 
-    # Изменение почты зарегистрированного пользователя
-    json = ChangeEmail(
+    response = api.account.change_registered_user_email(
         login=login,
         password=password,
-        email=f"new_{email}",
+        email=f"new_{email}"
     )
-    response = api.account.put_v1_account_email(json=json)
-
     assert_that(response.resource, has_properties(
         {
             "login": login,
