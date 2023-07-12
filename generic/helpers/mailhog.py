@@ -8,20 +8,6 @@ from requests import Response
 from restclient.restclient import Restclient
 
 
-# def decorator(fn):
-#     def wrapper(*args, **kwargs):
-#         for i in range(5):
-#             response = fn(*args, **kwargs)
-#             emails = response.json()["items"]
-#             if len(emails) < 1:
-#                 print(f"attempt {i}")
-#                 time.sleep(2)
-#                 continue
-#             else:
-#                 return response
-#
-#     return wrapper
-
 @dataclass
 class EmailBodyInfo:
     token_name: str
@@ -88,9 +74,6 @@ class MailhogApi:
         time.sleep(2)
         return self.get_token_by_login(login=login, token_type=token_type, attempt=attempt - 1)
 
-
-if __name__ == "__main__":
-    activate = MailhogApi().get_token_by_login(login="login116", token_type=TokenType.ACTIVATE)
-    password = MailhogApi().get_token_by_login(login="login116", token_type=TokenType.RESET_PASSWORD)
-    print(activate)
-    print(password)
+    def delete_all_messages(self):
+        response = self.client.delete(path="/api/v1/messages")
+        return response
