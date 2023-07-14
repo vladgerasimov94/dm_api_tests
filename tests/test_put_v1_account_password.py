@@ -1,8 +1,9 @@
+import time
+
 import structlog
 
-from dm_api_account.models.user_envelope_model import UserRole, Rating
+from generic.helpers.orm_db import OrmDatabase
 from services.dm_api_account import Facade
-from hamcrest import assert_that, has_properties
 
 structlog.configure(
     processors=[
@@ -13,10 +14,17 @@ structlog.configure(
 
 def test_put_v1_account_password():
     api = Facade(host="http://localhost:5051")
+    orm = OrmDatabase(user="postgres", password="admin", host="localhost", database="dm3.5")
 
     login = "login122"
     email = f"{login}@mail.ru"
     password = login + login
+
+    orm.delete_user_by_login(login=login)
+    dataset = orm.get_user_by_login(login=login)
+    assert len(dataset) == 0
+
+    api.mailhog.delete_all_messages()
 
     api.account.register_new_user(
         login=login,
@@ -24,37 +32,28 @@ def test_put_v1_account_password():
         password=password
     )
 
-    response = api.account.activate_registered_user(login=login)
-    assert_that(response.resource, has_properties(
-        {
-            "login": login,
-            "roles": [UserRole.GUEST, UserRole.PLAYER],
-            "rating": Rating(
-                enabled=True,
-                quality=0,
-                quantity=0
-            )
-        }
-    ))
+    dataset = orm.get_user_by_login(login=login)
+    for row in dataset:
+        assert row.Login == login
+        assert row.Activated is False
+
+    orm.activate_registered_user_by_login(login=login)
+    time.sleep(2)
+    dataset = orm.get_user_by_login(login=login)
+    for row in dataset:
+        assert row.Activated is True
 
     token = api.login.get_auth_token(login=login, password=password)
     api.account.set_headers(headers=token)
 
+    old_password_hash = orm.get_password_hash_by_login(login=login)
     api.account.reset_registered_user_password(login=login, email=email)
 
-    response = api.account.change_registered_user_password(
+    api.account.change_registered_user_password(
         login=login,
         old_password=password,
         new_password=f"new_{password}"
     )
-    assert_that(response.resource, has_properties(
-        {
-            "login": login,
-            "roles": [UserRole.GUEST, UserRole.PLAYER],
-            "rating": Rating(
-                enabled=True,
-                quality=0,
-                quantity=0
-            )
-        }
-    ))
+    time.sleep(1)
+    new_password_hash = orm.get_password_hash_by_login(login=login)
+    assert new_password_hash != old_password_hash
