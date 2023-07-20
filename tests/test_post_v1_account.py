@@ -1,46 +1,41 @@
-import time
+import pytest
 
-from generic.helpers.orm_db import OrmDatabase
-from services.dm_api_account import Facade
-import structlog
-
-structlog.configure(
-    processors=[
-        structlog.processors.JSONRenderer(indent=4, sort_keys=True, ensure_ascii=False)
-    ]
-)
+from dm_api_account.utilities import random_string
+from hamcrest import assert_that, equal_to
 
 
-def test_post_v1_account():
-    api = Facade(host="http://localhost:5051")
-    orm = OrmDatabase(user="postgres", password="admin", host="localhost", database="dm3.5")
+@pytest.mark.parametrize("login, email, password, status_code, check", [
+    ("12", "12@12.ru", "2134544", 201, ""),  # Валидные данные
+    ("12", "12@12.ru", random_string(1, 5), 400, {"Password": ["Short"]}),  # Пароль менее либо равен 5 символам
+    ("1", "12@12.ru", "2134544", 400, {"Login": ["Short"]}),  # Логин менее 2 символов
+    ("12", "12@", "2134544", 400, {"Email": ["Invalid"]}),  # Емейл не содержит доменную часть
+    ("12", "12", "2134544", 400, {"Email": ["Invalid"]}),  # Емейл не содержит символ @
+])
+def test_create_and_activate_user_with_random_params(
+        dm_api_facade,
+        dm_orm,
+        login,
+        email,
+        password,
+        status_code,
+        check
+):
+    dm_orm.delete_user_by_login(login=login)
+    dm_api_facade.mailhog.delete_all_messages()
 
-    login = "login103"
-    email = f"{login}@mail.ru"
-    password = login + login
-
-    orm.delete_user_by_login(login=login)
-    dataset = orm.get_user_by_login(login=login)
-    assert len(dataset) == 0
-
-    api.mailhog.delete_all_messages()
-
-    api.account.register_new_user(
+    response = dm_api_facade.account.register_new_user(
         login=login,
         email=email,
-        password=password
+        password=password,
+        status_code=status_code,
     )
+    if status_code == 201:
+        dm_orm.activate_registered_user_by_login(login=login)
 
-    dataset = orm.get_user_by_login(login=login)
-    for row in dataset:
-        assert row.Login == login
-        assert row.Activated is False
+        dataset = dm_orm.get_user_by_login(login=login)
+        for row in dataset:
+            assert row.Activated is True
 
-    orm.activate_registered_user_by_login(login=login)
-
-    time.sleep(2)
-    dataset = orm.get_user_by_login(login=login)
-    for row in dataset:
-        assert row.Activated is True
-
-    api.login.login_user(login=login, password=password)
+        dm_api_facade.login.login_user(login=login, password=password)
+    else:
+        assert_that(response.json()["errors"], equal_to(check))
