@@ -1,8 +1,31 @@
 import uuid
 from typing import Any
 
+import allure
 import structlog
 from sqlalchemy import create_engine
+
+
+def allure_attach(fn):
+    def wrapper(*args, **kwargs):
+        query = kwargs.get("query")
+        allure.attach(
+            str(query.compile(compile_kwargs={"literal_binds": True})),
+            name="query",
+            attachment_type=allure.attachment_type.TEXT,
+        )
+
+        dataset = fn(*args, **kwargs)
+
+        if dataset:
+            allure.attach(
+                str(dataset),
+                name="dataset",
+                attachment_type=allure.attachment_type.TEXT,
+            )
+        return dataset
+
+    return wrapper
 
 
 class OrmClient:
@@ -21,8 +44,10 @@ class OrmClient:
         self.log = structlog.get_logger(self.__class__.__name__).bind(service="db")
 
     def close_connection(self) -> None:
-        self.db.close()
+        with allure.step("Закрытие соединения с базой данных"):
+            self.db.close()
 
+    @allure_attach
     def send_query(self, query: Any) -> list[Any]:
         print(query)
         log = self.log.bind(event_id=str(uuid.uuid4()))
@@ -38,6 +63,7 @@ class OrmClient:
         )
         return result
 
+    @allure_attach
     def send_bulk_query(self, query: Any) -> None:
         print(query)
         log = self.log.bind(event_id=str(uuid.uuid4()))

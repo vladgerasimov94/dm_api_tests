@@ -1,8 +1,12 @@
 from collections import namedtuple
+
+import allure
 import structlog
 import pytest
 from vyper import v
 from pathlib import Path
+
+from generic.assertions.post_v1_account import AssertionsPostV1Account
 from generic.helpers.mailhog import MailhogApi
 from generic.helpers.orm_db import OrmDatabase
 from services.dm_api_account import Facade
@@ -37,6 +41,7 @@ def dm_orm():
 
 
 @pytest.fixture
+@allure.step("Подготовка тестового пользователя")
 def prepare_user(dm_api_facade, dm_orm):
     user_data = namedtuple("User", "login, email, password")
     user = user_data(login="login103", email="login103@mail.ru", password="login103login103")
@@ -67,6 +72,13 @@ def set_config(request):
 
 
 def pytest_addoption(parser):
-    parser.addoption("--env", action="store", default="stg")  # 2. Изменяем опцию env, которая читает полностью конфиг
+    parser.addoption(
+        "--env", action="store", default="server"  # 2. Изменяем опцию env, которая читает полностью конфиг
+    )
     for option in options:
         parser.addoption(f"--{option}", action="store", default=None)
+
+
+@pytest.fixture
+def assertions(dm_orm):
+    return AssertionsPostV1Account(dm_orm)
