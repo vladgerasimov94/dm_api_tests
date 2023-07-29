@@ -10,6 +10,7 @@ from generic.assertions.post_v1_account import AssertionsPostV1Account
 from generic.helpers.mailhog import MailhogApi
 from generic.helpers.orm_db import OrmDatabase
 from services.dm_api_account import Facade
+from data.post_v1_account import PostV1AccountData as data
 
 structlog.configure(
     processors=[
@@ -44,7 +45,7 @@ def dm_orm():
 @allure.step("Подготовка тестового пользователя")
 def prepare_user(dm_api_facade, dm_orm):
     user_data = namedtuple("User", "login, email, password")
-    user = user_data(login="login103", email="login103@mail.ru", password="login103login103")
+    user = user_data(login=data.login, email=data.email, password=data.password)
     dm_orm.delete_user_by_login(login=user.login)
     dataset = dm_orm.get_user_by_login(login=user.login)
     assert len(dataset) == 0

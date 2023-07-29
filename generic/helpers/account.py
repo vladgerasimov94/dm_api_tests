@@ -1,7 +1,7 @@
 import allure
 from requests import Response
 
-from dm_api_account.models import Registration, UserEnvelope, UserDetailsEnvelope, ChangePassword, ResetPassword, \
+from apis.dm_api_account.models import Registration, UserEnvelope, UserDetailsEnvelope, ChangePassword, ResetPassword, \
     ChangeEmail
 from generic.helpers.mailhog import TokenType
 
