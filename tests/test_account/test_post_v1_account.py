@@ -1,7 +1,7 @@
 import allure
 import pytest
 
-from apis.dm_api_account.utilities import random_string
+from dm_api_account.utilities import random_string
 
 
 @allure.suite("Тесты на проверку метода POST{host}/v1/account")
