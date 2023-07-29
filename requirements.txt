@@ -1,7 +1,7 @@
-git+https://github.com/vladgerasimov94/orm_client.git
-git+https://github.com/vladgerasimov94/restclient.git
-git+https://github.com/vladgerasimov94/db_client.git
-git+https://github.com/vladgerasimov94/dm_api_account.git
+orm-client @ git+https://github.com/vladgerasimov94/orm_client.git@0057110d13bd5bcee1f671f02541e60804cbc6cd
+db-client @ git+https://github.com/vladgerasimov94/db_client.git@5e1fe5118d63e0f719ff88230a44a60a063c6dc8
+dm-api-account @ git+https://github.com/vladgerasimov94/dm_api_account.git@0ec341b073ab7a62e840980239cd5d14816b1cc7
+restclient @ git+https://github.com/vladgerasimov94/restclient.git@87e6b69a7fb018104f01a1a90f6118803aa75674
 requests==2.31.0
 pytest==7.3.2
 structlog==23.1.0
