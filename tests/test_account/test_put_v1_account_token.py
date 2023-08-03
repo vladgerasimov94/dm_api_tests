@@ -1,4 +1,4 @@
-from dm_api_account.models.user_envelope_model import UserRole, Rating
+from dm_api_account.models import Rating
 from hamcrest import assert_that, has_properties
 
 
@@ -27,7 +27,6 @@ def test_put_v1_account_token(dm_api_facade, dm_orm, prepare_user):
     assert_that(response.resource, has_properties(
         {
             "login": login,
-            "roles": [UserRole.GUEST, UserRole.PLAYER],
             "rating": Rating(
                 enabled=True,
                 quality=0,

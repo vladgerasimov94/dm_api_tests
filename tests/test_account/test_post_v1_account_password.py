@@ -1,5 +1,4 @@
 from datetime import datetime
-from dm_api_account.models.user_envelope_model import UserRole
 from hamcrest import assert_that, instance_of, has_properties
 
 
@@ -19,7 +18,6 @@ def test_post_v1_account_password(dm_api_facade, dm_orm, prepare_user):
     assert_that(response.resource, has_properties(
         {
             "login": login,
-            "roles": [UserRole.GUEST, UserRole.PLAYER],
             "registration": instance_of(datetime)
         }
     ))

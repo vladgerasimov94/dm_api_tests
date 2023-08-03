@@ -20,7 +20,6 @@ def test_put_v1_account_password(dm_api_facade, dm_orm, prepare_user):
         assert row.Activated is True
 
     token = dm_api_facade.login.get_auth_token(login=login, password=password)
-    dm_api_facade.account.set_headers(headers=token)
 
     old_password_hash = dm_orm.get_password_hash_by_login(login=login)
     dm_api_facade.account.reset_registered_user_password(login=login, email=email)
@@ -28,7 +27,8 @@ def test_put_v1_account_password(dm_api_facade, dm_orm, prepare_user):
     dm_api_facade.account.change_registered_user_password(
         login=login,
         old_password=password,
-        new_password=f"new_{password}"
+        new_password=f"new_{password}",
+        x_dm_auth_token=token,
     )
     new_password_hash = dm_orm.get_password_hash_by_login(login=login)
     assert new_password_hash != old_password_hash

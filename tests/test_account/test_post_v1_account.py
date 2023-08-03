@@ -1,7 +1,8 @@
 import allure
 import pytest
 
-from dm_api_account.utilities import random_string
+from generic.assertions.response_checker import check_status_code_http
+from generic.helpers.test_data import random_string
 
 
 @allure.suite("Тесты на проверку метода POST{host}/v1/account")
@@ -53,17 +54,14 @@ class TestsPostV1Account:
         """
         dm_orm.delete_user_by_login(login=login)
         dm_api_facade.mailhog.delete_all_messages()
-
-        response = dm_api_facade.account.register_new_user(
-            login=login,
-            email=email,
-            password=password,
-            status_code=status_code,
-        )
+        with check_status_code_http(expected_status_code=status_code, expected_result=check):
+            dm_api_facade.account.register_new_user(
+                login=login,
+                email=email,
+                password=password,
+            )
         if status_code == 201:
             assertions.check_user_was_created(login=login)
             dm_orm.activate_registered_user_by_login(login=login)
             assertions.check_user_was_activated(login=login)
             dm_api_facade.login.login_user(login=login, password=password)
-        else:
-            assertions.check_response_error(response=response, error_block=check)
