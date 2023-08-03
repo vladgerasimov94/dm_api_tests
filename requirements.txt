@@ -10,3 +10,9 @@ records==0.5.3
 SQLAlchemy==1.4.46
 sqlacodegen==2.3.0.post1
 allure-pytest==2.13.2
+grpcio==1.56.2
+grpcio-tools==1.56.2
+mypy-protobuf==3.5.0
+betterproto==v2.0.0-beta5
+pytest-asyncio==0.21.1
+vyper-config==1.1.1

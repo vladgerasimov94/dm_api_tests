@@ -1,6 +1,6 @@
 from datetime import datetime
 from hamcrest import assert_that, has_properties, instance_of
-from apis.dm_api_account import UserRole
+from apis.dm_api_account.models.user_details_envelope_model import UserRole
 
 
 def test_get_v1_account(dm_api_facade, dm_orm, prepare_user):

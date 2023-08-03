@@ -1,7 +1,9 @@
 service:
   dm_api_account: http://5.63.153.31:5051
   mailhog: http://5.63.153.31:5025
-  dm_api_search: 5.63.153.31:5052
+  dm_api_search:
+    host: 5.63.153.31
+    port: 5052
 
 database:
   dm3_5:

@@ -9,8 +9,11 @@ from pathlib import Path
 from generic.assertions.post_v1_account import AssertionsPostV1Account
 from generic.helpers.mailhog import MailhogApi
 from generic.helpers.orm_db import OrmDatabase
+from generic.helpers.search import Search
 from services.dm_api_account import Facade
 from data.post_v1_account import PostV1AccountData as data
+from apis.dm_api_search_async import SearchEngineStub
+from grpclib.client import Channel
 
 structlog.configure(
     processors=[
@@ -42,6 +45,21 @@ def dm_orm():
 
 
 @pytest.fixture
+def grpc_search():
+    client = Search(target=f"{v.get('service.dm_api_search.host')}:{v.get('service.dm_api_search.port')}")
+    yield client
+    client.close()
+
+
+@pytest.fixture
+def grpc_search_async():
+    channel = Channel(host=v.get("service.dm_api_search.host"), port=v.get("service.dm_api_search.port"))
+    client = SearchEngineStub(channel=channel)
+    yield client
+    channel.close()
+
+
+@pytest.fixture
 @allure.step("Подготовка тестового пользователя")
 def prepare_user(dm_api_facade, dm_orm):
     user_data = namedtuple("User", "login, email, password")
@@ -57,6 +75,7 @@ def prepare_user(dm_api_facade, dm_orm):
 options = (
     "service.dm_api_account",
     "service.mailhog",
+    "service.dm_api_search",
     "database.dm3_5.host",
 )  # 1. Создаем список опций, которые можем динамически менять
 
@@ -74,7 +93,7 @@ def set_config(request):
 
 def pytest_addoption(parser):
     parser.addoption(
-        "--env", action="store", default="server"  # 2. Изменяем опцию env, которая читает полностью конфиг
+        "--env", action="store", default="server"  # 2. Изменяем опцию env, которая читает полностью конфиг - stg
     )
     for option in options:
         parser.addoption(f"--{option}", action="store", default=None)
