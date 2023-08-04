@@ -2,7 +2,6 @@ import pprint
 
 import pytest
 from betterproto import Casing
-
 from apis.dm_api_search_async import SearchRequest, SearchEntityType
 
 
@@ -30,15 +29,7 @@ def test_search(grpc_search, prepare_user, dm_api_facade, dm_orm):
     token = dm_api_facade.login.get_auth_token(login=login, password=password)
     dm_api_facade.forum.set_headers(headers=token)
 
-    json = {
-        "forum": {
-            "id": "Общий",
-            "unreadTopicsCount": 0
-        },
-        "title": "test_post",
-        "description": "bla bla bla"
-    }
-    dm_api_facade.forum.post_new_topic(forum_id="Общий", json=json)
+    dm_api_facade.forum.post_new_topic(topic_id="Общий", topic_title="test_post", topic_description="bla bla bla")
 
     response = grpc_search.search(
         query="test_post",
@@ -73,16 +64,7 @@ async def test_search_async(grpc_search_async, prepare_user, dm_api_facade, dm_o
     token = dm_api_facade.login.get_auth_token(login=login, password=password)
     dm_api_facade.forum.set_headers(headers=token)
 
-    json = {
-        "forum": {
-            "id": "Общий",
-            "unreadTopicsCount": 0
-        },
-        "title": "test_post123",
-        "description": "bla bla bla blaaa"
-    }
-    dm_api_facade.forum.post_new_topic(forum_id="Общий", json=json)
-
+    dm_api_facade.forum.post_new_topic(topic_id="Общий", topic_title="test_post123", topic_description="bla bla blaaaa")
 
     response = await grpc_search_async.search(
         search_request=SearchRequest(
